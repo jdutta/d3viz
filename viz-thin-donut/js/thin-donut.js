@@ -3,7 +3,7 @@
     var chartConfig = {
         width: 200,
         height: 200,
-        hasBottomLabel: false,
+        hasBottomLabel: true,
         bottomMarginForLabel: 30,
         color: d3.scale.category10(),
         renderHalfDonut: false,
@@ -17,10 +17,9 @@
     };
 
     function makeRandomData() {
-        var n = Math.floor(Math.random() * 10);
         return {
-            centerLabel: '' + n + 'k',
-            bottomLabel: 'hello',
+            centerLabel: 'hello',
+            bottomLabel: 'world',
             values: [
                 {label: 'x', value: Math.random() * 3},
                 {label: 'y', value: Math.random() * 10}
@@ -29,8 +28,12 @@
     }
 
     function init() {
-        var chartData = makeRandomData();
-        drawChart('thin-donut-chart', chartData, chartConfig);
+        var chartData = makeRandomData(),
+            chartId = 'thin-donut-chart',
+            d3ChartEl = d3.select('#' + chartId);
+        chartConfig.width = parseInt(d3ChartEl.style('width')) || chartConfig.width;
+        chartConfig.height = parseInt(d3ChartEl.style('height')) || chartConfig.height;
+        drawChart(chartId, chartData, chartConfig);
     }
 
     function drawChart(chartId, chartData, chartConfig) {

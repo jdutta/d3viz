@@ -5,6 +5,11 @@ body {
     position: relative;
 }
 
+#thin-donut-chart {
+    width: inherit;
+    height: inherit;
+}
+
 .center-label, .bottom-label {
     text-anchor: middle;
     alignment-baseline: middle;
