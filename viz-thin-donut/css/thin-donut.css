@@ -1,0 +1,16 @@
+body {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    width: 960px;
+    height: 500px;
+    position: relative;
+}
+
+.center-label, .bottom-label {
+    text-anchor: middle;
+    alignment-baseline: middle;
+    pointer-events: none;
+}
+
+.half-donut .center-label {
+    alignment-baseline: initial;
+}
