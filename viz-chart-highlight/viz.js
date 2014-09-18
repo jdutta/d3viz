@@ -1,5 +1,3 @@
-// Quick charting tool for Shoukat
-
 // Configurable params
 // Click on the number and see a magic slider appears to tweak it.
 var config = {
@@ -13,7 +11,10 @@ var config = {
 
 // If the data file is foo.csv, then use tributary.foo to read that csv.
 // Note: please have no space around comma in the csv file.
+// Uncomment this when in tributary
+// visualize(tributary.chart_data);
 
+// Comment this when in tributary
 d3.csv('./chart-data.csv', function (error, json) {
     visualize(json);
 });
