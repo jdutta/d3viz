@@ -1,11 +1,12 @@
 // Configurable params
 // Click on the number and see a magic slider appears to tweak it.
 var config = {
-    width: 6000,
+    width: 4000,
     height: 380,
+    origin: [75, 76],
     textFontSize: 11,
     inactiveBarHeight: 2,
-    activityBarWidth: 5,
+    activityBarWidth: 6,
     anomalyLineThickness: 8
 };
 
@@ -15,7 +16,7 @@ var config = {
 // visualize(tributary.chart_data);
 
 // Comment this when in tributary
-d3.csv('./chart-data.csv', function (error, json) {
+d3.csv('chart-data.csv', function (error, json) {
     visualize(json);
 });
 
@@ -25,6 +26,8 @@ function visualize(data) {
 
     // manage the mapping of facility -> seq nums
     var seqNumSeen = {};
+
+    var maxChartHeight = 0;
 
     // do some processing of the data
     data.forEach(function (d) {
@@ -74,7 +77,7 @@ function visualize(data) {
     });
 
     var gRoot = svg.append('svg:g')
-        .attr('transform', 'translate(75, 76)');
+        .attr('transform', 'translate(' + config.origin + ')');
 
     var maxValue = d3.max(data, function (d) {
         return +d.File_Size;
@@ -96,6 +99,7 @@ function visualize(data) {
 
     barEnter
         .append('svg:rect')
+        .classed('bar', true)
         .attr({
             y: function (d) {
                 if (isValidActivityTypeToShow(d)) {
@@ -108,9 +112,6 @@ function visualize(data) {
             },
             height: 0,
             width: function (d) {
-//                if (isValidActivityTypeToShow(d)) {
-//                    return config.activityBarWidth;
-//                }
                 return config.activityBarWidth;
             },
             fill: function (d) {
@@ -137,8 +138,11 @@ function visualize(data) {
 
     Object.keys(seqNumSeen).forEach(function (service, serviceIndex) {
         var yPos = config.height + 10 + serviceIndex * 20;
+        maxChartHeight = yPos;
         var oneSeqLineG = gRoot.append('svg:g')
             .classed('anomaly-seq', true);
+
+        // service name as label at the start of the sequence line
         oneSeqLineG
             .append('svg:text')
             .attr({
@@ -151,7 +155,7 @@ function visualize(data) {
             })
             .text(service);
 
-        // Background line behind the bands
+        // background line behind the bands
         oneSeqLineG.append('svg:line')
             .attr({
                 x1: 0,
@@ -168,6 +172,7 @@ function visualize(data) {
         Object.keys(seqNumSeen[service]).forEach(function (key) {
             var lineData = seqNumSeen[service][key];
 
+            // one segment
             oneSeqLineG.append('svg:line')
                 .attr({
                     x1: lineData.x1,
@@ -181,6 +186,7 @@ function visualize(data) {
                     'stroke-opacity': 0.6
                 });
 
+            // seq number below the segment
             oneSeqLineG.append('svg:text')
                 .attr({
                     x: lineData.x1,
@@ -192,5 +198,63 @@ function visualize(data) {
                 })
                 .text(key);
         });
+    });
+
+    // vertical scanner line that moves with mouse
+    var scannerLine = gRoot.append('svg:g');
+    scannerLine
+        .append('svg:line')
+        .attr({
+            x1: 0,
+            y1: 0,
+            x2: 0,
+            y2: maxChartHeight + 30
+        })
+        .style({
+            stroke: '#aaa',
+            'stroke-width': 1,
+            'stroke-opacity': 0.6
+        });
+    var scannerLineLabel = scannerLine.append('svg:text')
+        .attr({
+            x: 5,
+            y: maxChartHeight + 30
+        });
+
+    function updateScannerLineLabel(mouseX) {
+        var scannedBarsInfo = {};
+        var bars = gRoot.selectAll('.bar');
+        bars.each(function (d) {
+            if (!isValidActivityTypeToShow(d)) {
+                return;
+            }
+            var x = xScale(d.created_timestamp_epoch);
+            if (mouseX >= x && mouseX <= x + config.activityBarWidth) {
+                if (Object.keys(scannedBarsInfo).indexOf(d.facility) === -1) {
+                    scannedBarsInfo[d.facility] = {d: +d.File_Size, s: +d.seq_numbers};
+                }
+                d3.select(this)
+                    .style({
+                        stroke: '#000',
+                        'stroke-width': 3
+                    });
+            } else {
+                d3.select(this)
+                    .style({
+                        'stroke-width': 0
+                    });
+            }
+        });
+        scannerLineLabel.text(JSON.stringify(scannedBarsInfo));
+    }
+
+    var mouseMoveThrottleTimer = null;
+    svg.on('mousemove', function () {
+        var coords = d3.mouse(this);
+        var mouseX = coords[0] - config.origin[0];
+        scannerLine.attr('transform', 'translate('+ mouseX + ',0)');
+
+        clearTimeout(mouseMoveThrottleTimer);
+        mouseMoveThrottleTimer= setTimeout(updateScannerLineLabel.bind(null, mouseX), 30);
     });
 }
