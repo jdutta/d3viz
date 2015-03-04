@@ -1,0 +1,62 @@
+{
+    "categoriesMap": {
+        "project1": {
+            "name": "Project1"
+        },
+        "project2": {
+            "name": "Project2"
+        },
+        "project3": {
+            "name": "Project3"
+        },
+        "project4": {
+            "name": "Project4"
+        }
+    },
+    "locationsMap": {
+        "sfo": {
+            "name": "San Francisco"
+        },
+        "sjc": {
+            "name": "San Jose"
+        }
+    },
+    "people": [
+        {
+            "name": "Fname1 Lname1",
+            "cats": ["project1"],
+            "locid": "sjc",
+            "imgUrl": ""
+        },
+        {
+            "name": "Fname2 Lname2",
+            "cats": ["project3"],
+            "locid": "sjc",
+            "imgUrl": ""
+        },
+        {
+            "name": "Fname3 Lname3",
+            "cats": ["project1"],
+            "locid": "sfo",
+            "imgUrl": ""
+        },
+        {
+            "name": "Fname4 Lname4",
+            "cats": ["project4"],
+            "locid": "sfo",
+            "imgUrl": ""
+        },
+        {
+            "name": "Fname5 Lname5",
+            "cats": ["project2"],
+            "locid": "sjc",
+            "imgUrl": ""
+        },
+        {
+            "name": "Fname6 Lname6",
+            "cats": ["project1"],
+            "locid": "sfo",
+            "imgUrl": ""
+        }
+    ]
+}

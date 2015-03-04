@@ -1,0 +1,45 @@
+#container {
+    width: 100%;
+    height: 100%;
+    background: #fefefe;
+    overflow: auto;
+}
+
+svg {
+    width: inherit;
+    height: 800px;
+}
+
+text {
+    font-size: 12px;
+    alignment-baseline: middle;
+}
+
+g.category-node rect,
+g.person-node rect {
+    stroke: #aaa;
+    stroke-opacity: 0.3;
+    fill: #eee;
+}
+
+g.category-node.active rect,
+g.person-node.active rect,
+path.link.active {
+    stroke: #1ca8dd;
+    stroke-opacity: 0.8;
+    stroke-width: 2;
+}
+
+path.link {
+    stroke: #aaa;
+    stroke-opacity: 0.3;
+    fill: none;
+}
+
+g.person-node image {
+    display: none;
+}
+
+g.person-node.active image {
+    display: block;
+}
