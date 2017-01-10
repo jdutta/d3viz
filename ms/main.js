@@ -1,8 +1,10 @@
 $(document).ready(function () {
 
     var slideUsageData;
+    var userActivityData;
     var userInteractionData;
-    var $actionHistogramEl = $('.action-histogram');
+    var $actionSlideUsageHistogramEl = $('.action-slide-usage-histogram');
+    var $actionUserActivityHistogramEl = $('.action-user-activity-histogram');
     var $userIdButtonsContainerEl = $('.user-id-buttons-container');
     var urlPrefix = 'http://prez.dialedin.io/assignments/98/presentation?child_index=';
 
@@ -33,12 +35,40 @@ $(document).ready(function () {
         });
     }
 
-    function removeAllFromSvg() {
-        d3.select('svg>*').remove();
+    function fetchUserActivityHistogramData(callback) {
+        d3.csv('user_view_activity_distribution.csv', function (json) {
+            userActivityData = json.map(function (o) {
+                return {
+                    user_id: o.user_id,
+                    count: +o.count
+                };
+            });
+        });
     }
 
-    function drawSlideUsageHistogram(data) {
-        console.log('Drawing slide usage histogram');
+    function removeAllFromSvg() {
+        d3.select('svg>*').remove();
+        d3.select('.tooltip').style('opacity', 0);
+    }
+
+    function drawSlideUsageHistogram() {
+        function onBarClick(slideIndex) {
+            var url = urlPrefix + slideIndex;
+            console.log(url);
+            window.open(url);
+        }
+        drawHistogram(slideUsageData, 'Chart: Usage of slides by all users', 'slide_index', 'frequency', onBarClick);
+    }
+
+    function drawUserActivityHistogram() {
+        function onBarClick(userId) {
+            drawUserInteractionScatterplotForUser(userId);
+        }
+        drawHistogram(userActivityData, 'Chart: User activity', 'user_id', 'count', onBarClick);
+    }
+
+    function drawHistogram(data, caption, xKey, yKey, onBarClick) {
+        console.log(caption);
         removeAllFromSvg();
 
         var config = {
@@ -49,7 +79,7 @@ $(document).ready(function () {
             mouseoverFillColor: 'red'
         };
 
-        function drawChart(data, xKey, yKey) {
+        function drawChart() {
             function getX(d) { return d[xKey]; }
             function getY(d) { return d[yKey]; }
             var svg = d3.select('svg');
@@ -105,7 +135,7 @@ $(document).ready(function () {
                 .attr('x', config.width/2)
                 .attr('y', config.height + 50)
                 .style('text-anchor', 'middle')
-                .text('Chart: Usage of slides by all users');
+                .text(caption);
 
             var histoEnter = gRoot.selectAll('.histo-bar')
                 .data(data)
@@ -147,12 +177,14 @@ $(document).ready(function () {
                         .style('opacity', 0);
                 })
                 .on('click', function (d) {
-                    var url = urlPrefix + getX(d);
-                    console.log('Url: ', url);
-                    window.open(url);
+                    onBarClick(getX(d));
                 });
         }
-        drawChart(data, 'slide_index', 'frequency');
+        drawChart();
+    }
+
+    function drawUserInteractionScatterplotForUser(userId) {
+        drawUserInteractionScatterplot(userId, userInteractionData[userId]);
     }
 
     function drawUserInteractionScatterplot(userId, data) {
@@ -274,18 +306,23 @@ $(document).ready(function () {
         drawChart(data, 'delta_time_elpased', 'slide_index');
     }
 
-    $actionHistogramEl.click(function () {
-        drawSlideUsageHistogram(slideUsageData);
+    $actionSlideUsageHistogramEl.click(function () {
+        drawSlideUsageHistogram();
+    });
+
+    $actionUserActivityHistogramEl.click(function () {
+        drawUserActivityHistogram();
     });
 
     $userIdButtonsContainerEl.click(function ($evt) {
         var userId = $evt.target.getAttribute('__data__');
-        drawUserInteractionScatterplot(userId, userInteractionData[userId]);
+        drawUserInteractionScatterplotForUser(userId);
     });
 
     fetchSlideUsageHistogramData(function () {
-        drawSlideUsageHistogram(slideUsageData);
+        drawSlideUsageHistogram();
     });
+
     fetchUserInteractionScatterplotData(function () {
         var ids = Object.keys(userInteractionData);
         var buttonHtml = ids.map(function (id) {
@@ -293,4 +330,6 @@ $(document).ready(function () {
         });
         $userIdButtonsContainerEl.html(buttonHtml);
     });
+
+    fetchUserActivityHistogramData();
 });
