@@ -184,11 +184,23 @@ $(document).ready(function () {
     }
 
     function drawUserInteractionScatterplotForUser(userId) {
-        drawUserInteractionScatterplot(userId, userInteractionData[userId]);
+        var params = {
+            userId: userId,
+            data: userInteractionData[userId],
+            caption: 'Chart: Interaction of slides by user {userId}',
+            xKey: 'delta_time_elpased',
+            yKey: 'slide_index'
+        };
+        drawUserInteractionScatterplot(params);
     }
 
-    function drawUserInteractionScatterplot(userId, data) {
-        console.log('Drawing user interaction scatterplot for userId', userId);
+    function drawUserInteractionScatterplot(params) {
+        var userId = params.userId;
+        var data = params.data;
+        var caption = params.caption.replace('{userId}', userId);
+        var xKey = params.xKey;
+        var yKey = params.yKey;
+        console.log(caption);
         removeAllFromSvg();
 
         var config = {
@@ -201,7 +213,7 @@ $(document).ready(function () {
             mouseoverOutlineColor: 'red'
         };
 
-        function drawChart(data, xKey, yKey) {
+        function drawChart() {
             function getX(d) { return d[xKey]; }
             function getY(d) { return d[yKey]; }
             var svg = d3.select('svg');
@@ -256,7 +268,7 @@ $(document).ready(function () {
                 .attr('x', config.width/2)
                 .attr('y', config.height + 50)
                 .style('text-anchor', 'middle')
-                .text('Chart: Interaction of slides by user ' + userId);
+                .text(caption);
 
             var chartEnter = gRoot.selectAll('.g-item')
                 .data(data)
@@ -303,7 +315,7 @@ $(document).ready(function () {
                 });
 
         }
-        drawChart(data, 'delta_time_elpased', 'slide_index');
+        drawChart();
     }
 
     $actionSlideUsageHistogramEl.click(function () {
