@@ -31,7 +31,7 @@ $(document).ready(function () {
         nCats = nCats || 3;
         catToGravityCenterScale = d3.scale.ordinal()
             .domain(d3.range(nCats))
-            .rangeRoundPoints([0, config.width], 0.7);
+            .rangeRoundPoints([0, config.width], 0.8);
         var data = d3.range(n).map(function (i) {
             return {
                 id: i,
@@ -113,17 +113,6 @@ $(document).ready(function () {
 
     function showBubblesForUser(params) {
         var gRoot = d3.select('svg > g');
-        var circle = gRoot.selectAll('.bubble circle');
-
-        /*
-        if (params.reset) {
-            circle.style({
-                stroke: config.bubbleStrokeColor,
-                'stroke-width': 1
-            });
-            return;
-        }
-        */
 
         // filter data first
         var data = params.data.data.filter(function (d) {
@@ -170,7 +159,6 @@ $(document).ready(function () {
 
     function showBubbleCategoriesForUser(params) {
         var gRoot = d3.select('svg > g');
-        var circle = gRoot.selectAll('.bubble circle');
         var data = params.data.dataForUser || params.data.data;
         var nItems = data.length;
         var updateSel = gRoot.selectAll('.bubble')
@@ -196,15 +184,6 @@ $(document).ready(function () {
                 d.x += (catToGravityCenterScale(d.cat) - d.x) * alpha;
             };
         }
-
-        /*
-        if (params.reset) {
-            circle.style({
-                fill: config.bubbleFillColor
-            });
-            return;
-        }
-        */
 
         updateSel
             .select('circle')
