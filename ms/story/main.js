@@ -6,7 +6,7 @@ $(document).ready(function () {
         nBubbles: 400,
         gRootXY: [60, 0],
         bubbleR: 5,
-        bubbleRadiusRange: [5, 8],
+        bubbleRadiusRange: [3, 10],
         bubbleUserColor: '#444',
         bubbleCategoryColor: d3.scale.category10(),
         bubbleFillColor: '#ddd',
@@ -15,6 +15,7 @@ $(document).ready(function () {
         slideIconSize: 5
     };
     var rScale;
+    var catToGravityCenterScale;
     var force;
     var tooltipSelector = '.tooltip';
     var data;
@@ -28,6 +29,9 @@ $(document).ready(function () {
         slidesFrac = slidesFrac || 0.5;
         nUsers = nUsers || 3;
         nCats = nCats || 3;
+        catToGravityCenterScale = d3.scale.ordinal()
+            .domain(d3.range(nCats))
+            .rangeRoundPoints([0, config.width], 0.7);
         var data = d3.range(n).map(function (i) {
             return {
                 id: i,
@@ -72,15 +76,16 @@ $(document).ready(function () {
             .start();
 
         var bubbles = gRoot.selectAll('.bubble')
-            .data(data.data)
+            .data(data.data, function (d) { return d.id; })
             .enter()
             .append('svg:g')
             .classed('bubble', true)
             .attr({
-                transform: function (d, i) {
+                transform: function (d) {
                     return 'translate(' + [d.x, d.y] + ')';
                 }
-            });
+            })
+            .call(force.drag);
 
         bubbles
             .append('svg:circle')
@@ -110,6 +115,7 @@ $(document).ready(function () {
         var gRoot = d3.select('svg > g');
         var circle = gRoot.selectAll('.bubble circle');
 
+        /*
         if (params.reset) {
             circle.style({
                 stroke: config.bubbleStrokeColor,
@@ -117,6 +123,7 @@ $(document).ready(function () {
             });
             return;
         }
+        */
 
         // filter data first
         var data = params.data.data.filter(function (d) {
@@ -164,15 +171,43 @@ $(document).ready(function () {
     function showBubbleCategoriesForUser(params) {
         var gRoot = d3.select('svg > g');
         var circle = gRoot.selectAll('.bubble circle');
+        var data = params.data.dataForUser || params.data.data;
+        var nItems = data.length;
+        var updateSel = gRoot.selectAll('.bubble')
+            .data(data, function (d) { return d.id; });
 
+        // See: https://bl.ocks.org/mbostock/1804919
+        function tick(e) {
+            if (e.alpha < 0.001) {
+                force.stop();
+                return;
+            }
+
+            updateSel
+                .each(gravity(.2 * e.alpha))
+                //.each(collide(.5))
+                .attr('transform', function (d) { return 'translate('+[d.x, d.y] +')'; });
+        }
+
+        // Move nodes toward cluster focus.
+        function gravity(alpha) {
+            return function(d) {
+                d.y += (config.height/2 - d.y) * alpha;
+                d.x += (catToGravityCenterScale(d.cat) - d.x) * alpha;
+            };
+        }
+
+        /*
         if (params.reset) {
             circle.style({
                 fill: config.bubbleFillColor
             });
             return;
         }
+        */
 
-        circle
+        updateSel
+            .select('circle')
             .transition()
             .duration(300)
             .delay(function (d, i) {
@@ -185,10 +220,16 @@ $(document).ready(function () {
                     }
                     return config.bubbleFillColor;
                 }
+            })
+            .each('end', function () {
+                nItems--;
+                if (!nItems) {
+                    force
+                        .charge(-100)
+                        .on('tick', tick)
+                        .start();
+                }
             });
-
-        //force.nodes(params.data.data, function (d) { return d.id; });
-        //force.start();
     }
 
     function showSlideTypeIcon(params) {
