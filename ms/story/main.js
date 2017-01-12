@@ -3,7 +3,7 @@ $(document).ready(function () {
     var config = {
         width: 600,
         height: 500,
-        nBubbles: 300,
+        nBubbles: 400,
         gRootXY: [60, 0],
         bubbleR: 5,
         bubbleRadiusRange: [5, 8],
@@ -15,6 +15,7 @@ $(document).ready(function () {
         slideIconSize: 5
     };
     var rScale;
+    var force;
     var tooltipSelector = '.tooltip';
     var data;
 
@@ -27,8 +28,9 @@ $(document).ready(function () {
         slidesFrac = slidesFrac || 0.5;
         nUsers = nUsers || 3;
         nCats = nCats || 3;
-        var data = d3.range(n).map(function () {
+        var data = d3.range(n).map(function (i) {
             return {
+                id: i,
                 slide: (Math.random() < slidesFrac),
                 user: getRandom(nUsers),
                 cat: getRandom(nCats)
@@ -58,8 +60,8 @@ $(document).ready(function () {
             .domain([0, data.meta.nCats - 1])
             .rangeRound(config.bubbleRadiusRange);
 
-        var force = d3.layout.force()
-            .nodes(data.data)
+        force = d3.layout.force()
+            .nodes(data.data, function (d) { return d.id; })
             .links([])
             .size([config.width, config.height])
             .gravity(0.1)
@@ -116,37 +118,45 @@ $(document).ready(function () {
             return;
         }
 
-        /*
         // filter data first
         var data = params.data.data.filter(function (d) {
             return (d.user === params.userId);
         });
-        gRoot.selectAll('.bubble')
-            .data(data)
+        params.data.dataForUser = data;
+        var updateSel = gRoot.selectAll('.bubble')
+            .data(data, function (d) { return d.id; });
+        var nItemsRemoved = params.data.data.length - data.length;
+
+        updateSel
             .select('circle')
+            .transition()
+            .duration(300)
+            .delay(function (d, i) {
+                return i*3;
+            })
             .style({
                 stroke: config.bubbleUserColor,
                 'stroke-width': config.bubbleStrokeWidthMax
             });
 
-        return;
-        //*/
-
-        circle
+        updateSel
+            .exit()
             .transition()
             .duration(100)
             .delay(function (d, i) {
-                return i*3;
+                return 500+i*3;
             })
             .style({
-                stroke: function (d) {
-                    if (d.user === params.userId) {
-                        return config.bubbleUserColor;
-                    }
-                    return config.bubbleStrokeColor;
-                },
-                'stroke-width': function (d) {
-                    return (d.user === params.userId) ? config.bubbleStrokeWidthMax : 1;
+                opacity: 0
+            })
+            .remove()
+            .each('end', function () {
+                nItemsRemoved--;
+                if (!nItemsRemoved) {
+                    force.nodes(data, function (d) {
+                        return d.id;
+                    });
+                    force.start();
                 }
             });
     }
@@ -164,7 +174,7 @@ $(document).ready(function () {
 
         circle
             .transition()
-            .duration(100)
+            .duration(300)
             .delay(function (d, i) {
                 return i*3;
             })
@@ -176,6 +186,9 @@ $(document).ready(function () {
                     return config.bubbleFillColor;
                 }
             });
+
+        //force.nodes(params.data.data, function (d) { return d.id; });
+        //force.start();
     }
 
     function showSlideTypeIcon(params) {
@@ -227,7 +240,7 @@ $(document).ready(function () {
             showBubblesForUser({userId: 1, data: data});
         });
         $('.action-2').click(function () {
-            showBubbleCategoriesForUser({userId: 1});
+            showBubbleCategoriesForUser({userId: 1, data: data});
         });
         $('.action-3').click(function () {
             showSlideTypeIcon({});
