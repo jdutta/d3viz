@@ -18,6 +18,7 @@ $(document).ready(function () {
     var catToGravityCenterScale;
     var force;
     var tooltipSelector = '.tooltip';
+    var allSlidesSelector = '.slide';
     var data;
 
     function removeAllFromSvg() {
@@ -252,19 +253,27 @@ $(document).ready(function () {
 
     }
 
+    function showSlide(i) {
+        $(allSlidesSelector).hide();
+        $('.slide-'+i).show();
+    }
+
     function setUpActionHandlers() {
         $(tooltipSelector).click(function () {
             $(tooltipSelector).hide();
         });
         $('.action-1').click(function () {
+            showSlide(2);
             showBubblesForUser({userId: 1, data: data});
         });
         $('.action-2').click(function () {
+            showSlide(3);
             showBubbleCategoriesForUser({userId: 1, data: data});
         });
         $('.action-3').click(function () {
             showSlideTypeIcon({});
         });
+        showSlide(1);
     }
 
     data = createData(config.nBubbles);
