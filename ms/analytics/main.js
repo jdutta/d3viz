@@ -94,19 +94,27 @@ $(document).ready(function () {
 
     function fetchUserCommentsViewHistogramData(callback) {
         d3.csv('data/view_comments_users.csv', function (json) {
-            var userFreq = {};
+            var viewOnlyFreq = {};
+            var postFreq = {};
             json.forEach(function (o) {
-                if (!userFreq[o.user_id]) {
-                    userFreq[o.user_id] = 1;
+                if (!viewOnlyFreq[o.user_id]) {
+                    viewOnlyFreq[o.user_id] = 1;
                 } else {
-                    userFreq[o.user_id]++;
+                    viewOnlyFreq[o.user_id]++;
+                }
+            });
+            userCommentsPostData.forEach(function (o) {
+                if (!postFreq[o.user_id]) {
+                    postFreq[o.user_id] = 1;
+                } else {
+                    postFreq[o.user_id]++;
                 }
             });
 
-            userCommentsViewData = Object.keys(userFreq).map(function (k) {
+            userCommentsViewData = Object.keys(viewOnlyFreq).map(function (k) {
                 return {
                     user_id: k,
-                    frequency: userFreq[k]
+                    frequency: viewOnlyFreq[k] + (postFreq[k] || 0)
                 }
             }).sort(function (a, b) {
                 return a.frequency === b.frequency ? 0 : (a.frequency > b.frequency ? -1 : 1);
@@ -131,9 +139,13 @@ $(document).ready(function () {
         drawHistogram({
             svgSelector: 'svg.chart1',
             data: slideUsageData,
-            caption: 'Chart: Usage of slides by all users',
+            caption: 'Chart: Which slides are being viewed the most?',
             xKey: 'slide_index',
             yKey: 'frequency',
+            labelMap: {
+                slide_index: 'Slide Number',
+                user_id: 'User ID'
+            },
             onBarClick: openSlideInNewTab
         });
     }
@@ -145,9 +157,13 @@ $(document).ready(function () {
         drawHistogram({
             svgSelector: 'svg.chart2',
             data: userActivityData,
-            caption: 'Chart: User activity',
+            caption: 'Chart: Which users are viewing slides most frequently?',
             xKey: 'user_id',
             yKey: 'count',
+            labelMap: {
+                user_id: 'User ID',
+                count: 'Count'
+            },
             onBarClick: onBarClick
         });
     }
@@ -159,6 +175,10 @@ $(document).ready(function () {
             caption: 'Chart: Which slides are getting most comments?',
             xKey: 'slide_index',
             yKey: 'frequency',
+            labelMap: {
+                slide_index: 'Slide Number',
+                frequency: 'Count'
+            },
             onBarClick: openSlideInNewTab
         });
     }
@@ -170,6 +190,10 @@ $(document).ready(function () {
             caption: 'Chart: Which users are viewing most comments?',
             xKey: 'user_id',
             yKey: 'frequency',
+            labelMap: {
+                user_id: 'User ID',
+                frequency: 'Count'
+            },
             onBarClick: null
         });
     }
@@ -181,6 +205,10 @@ $(document).ready(function () {
             caption: 'Chart: Which users are posting most comments?',
             xKey: 'user_id',
             yKey: 'frequency',
+            labelMap: {
+                user_id: 'User ID',
+                frequency: 'Count'
+            },
             onBarClick: null
         });
     }
@@ -191,6 +219,7 @@ $(document).ready(function () {
         var caption = params.caption;
         var xKey = params.xKey;
         var yKey = params.yKey;
+        var labelMap = params.labelMap;
         var onBarClick = params.onBarClick;
         console.log(caption);
         removeAllFromSvg(svgSelector);
@@ -238,7 +267,7 @@ $(document).ready(function () {
                 .attr('x', config.width/2)
                 .attr('y', 30)
                 .style('text-anchor', 'middle')
-                .text(xKey);
+                .text(labelMap[xKey]);
             gRoot.append('svg:g')
                 .classed('axis', true)
                 .attr('transform', 'translate('+[0, 0]+')')
@@ -249,7 +278,7 @@ $(document).ready(function () {
                 .attr('y', -config.gRootXY[0]+20)
                 //.attr('dy', '.71em')
                 .style('text-anchor', 'middle')
-                .text(yKey);
+                .text(labelMap[yKey]);
 
             // caption
             gRoot.append('svg:text')
@@ -318,6 +347,10 @@ $(document).ready(function () {
             caption: 'Chart: Interaction of slides by user {userId}',
             xKey: 'delta_time_elpased',
             yKey: 'slide_index',
+            labelMap: {
+                slide_index: 'Slide Number',
+                delta_time_elpased: 'Time Elapsed'
+            },
             onBubbleClick: openSlideInNewTab
         };
         drawUserInteractionScatterplot(params);
@@ -331,6 +364,7 @@ $(document).ready(function () {
         var caption = params.caption.replace('{userId}', userId);
         var xKey = params.xKey;
         var yKey = params.yKey;
+        var labelMap = params.labelMap;
         var onBubbleClick = params.onBubbleClick;
         console.log(caption);
         removeAllFromSvg(svgSelector);
@@ -374,7 +408,7 @@ $(document).ready(function () {
                 .attr('x', config.width/2)
                 .attr('y', 30)
                 .style('text-anchor', 'middle')
-                .text(xKey);
+                .text(labelMap[xKey]);
             gRoot.append('svg:g')
                 .classed('axis', true)
                 .attr('transform', 'translate('+[0, 0]+')')
@@ -385,7 +419,7 @@ $(document).ready(function () {
                 .attr('y', -config.gRootXY[0]+20)
                 //.attr('dy', '.71em')
                 .style('text-anchor', 'middle')
-                .text(yKey);
+                .text(labelMap[yKey]);
 
             // caption
             gRoot.append('svg:text')
@@ -454,8 +488,10 @@ $(document).ready(function () {
     fetchSlideCommentsUsersHistogramData(function () {
         drawSlideCommentsHistogram();
         drawUserCommentsPostHistogram();
-    });
-    fetchUserCommentsViewHistogramData(function () {
-        drawUserCommentsViewHistogram();
+
+        // chained fetch due to dependency on data
+        fetchUserCommentsViewHistogramData(function () {
+            drawUserCommentsViewHistogram();
+        });
     });
 });
