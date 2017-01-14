@@ -1,12 +1,5 @@
 $(document).ready(function () {
 
-    /*
-    todo:
-    "Which Slides Are Getting Most Comments?"
-    "Which Students Are Viewing Most Comments?"
-    "Which Students Are Posting Most Comments?"
-    */
-
     var slideUsageData;
     var userActivityData;
     var userInteractionData;
@@ -99,24 +92,49 @@ $(document).ready(function () {
         });
     }
 
+    function fetchUserCommentsViewHistogramData(callback) {
+        d3.csv('data/view_comments_users.csv', function (json) {
+            var userFreq = {};
+            json.forEach(function (o) {
+                if (!userFreq[o.user_id]) {
+                    userFreq[o.user_id] = 1;
+                } else {
+                    userFreq[o.user_id]++;
+                }
+            });
+
+            userCommentsViewData = Object.keys(userFreq).map(function (k) {
+                return {
+                    user_id: k,
+                    frequency: userFreq[k]
+                }
+            }).sort(function (a, b) {
+                return a.frequency === b.frequency ? 0 : (a.frequency > b.frequency ? -1 : 1);
+            });
+
+            callback();
+        });
+    }
+
+    function openSlideInNewTab(slideIndex) {
+        var url = urlPrefix + slideIndex;
+        console.log(url);
+        window.open(url);
+    }
+
     function removeAllFromSvg(svgSelector) {
         d3.select(svgSelector+'>*').remove();
         d3.select('.tooltip').style('opacity', 0);
     }
 
     function drawSlideUsageHistogram() {
-        function onBarClick(slideIndex) {
-            var url = urlPrefix + slideIndex;
-            console.log(url);
-            window.open(url);
-        }
         drawHistogram({
             svgSelector: 'svg.chart1',
             data: slideUsageData,
             caption: 'Chart: Usage of slides by all users',
             xKey: 'slide_index',
             yKey: 'frequency',
-            onBarClick: onBarClick
+            onBarClick: openSlideInNewTab
         });
     }
 
@@ -135,29 +153,35 @@ $(document).ready(function () {
     }
 
     function drawSlideCommentsHistogram() {
-        function onBarClick(slideIndex) {
-            var url = urlPrefix + slideIndex;
-            console.log(url);
-            window.open(url);
-        }
         drawHistogram({
             svgSelector: 'svg.chart4',
             data: slideCommentsData,
             caption: 'Chart: Which slides are getting most comments?',
             xKey: 'slide_index',
             yKey: 'frequency',
-            onBarClick: onBarClick
+            onBarClick: openSlideInNewTab
+        });
+    }
+
+    function drawUserCommentsViewHistogram() {
+        drawHistogram({
+            svgSelector: 'svg.chart5',
+            data: userCommentsViewData,
+            caption: 'Chart: Which users are viewing most comments?',
+            xKey: 'user_id',
+            yKey: 'frequency',
+            onBarClick: null
         });
     }
 
     function drawUserCommentsPostHistogram() {
         drawHistogram({
-            svgSelector: 'svg.chart5',
+            svgSelector: 'svg.chart6',
             data: userCommentsPostData,
             caption: 'Chart: Which users are posting most comments?',
             xKey: 'user_id',
             yKey: 'frequency',
-            onBarClick: function () {}
+            onBarClick: null
         });
     }
 
@@ -257,6 +281,11 @@ $(document).ready(function () {
                 .style({
                     fill: function (d) {
                         return colorScale(getY(d));
+                    },
+                    cursor: function (d) {
+                        if (onBarClick) {
+                            return 'pointer';
+                        }
                     }
                 })
                 .on('mouseover', function (d) {
@@ -288,7 +317,8 @@ $(document).ready(function () {
             data: userInteractionData[userId],
             caption: 'Chart: Interaction of slides by user {userId}',
             xKey: 'delta_time_elpased',
-            yKey: 'slide_index'
+            yKey: 'slide_index',
+            onBubbleClick: openSlideInNewTab
         };
         drawUserInteractionScatterplot(params);
         $chartModalEl.modal('show');
@@ -301,6 +331,7 @@ $(document).ready(function () {
         var caption = params.caption.replace('{userId}', userId);
         var xKey = params.xKey;
         var yKey = params.yKey;
+        var onBubbleClick = params.onBubbleClick;
         console.log(caption);
         removeAllFromSvg(svgSelector);
 
@@ -385,7 +416,12 @@ $(document).ready(function () {
                     r: config.dotR
                 })
                 .style({
-                    fill: config.bubbleFillColor
+                    fill: config.bubbleFillColor,
+                    cursor: function (d) {
+                        if (onBubbleClick) {
+                            return 'pointer';
+                        }
+                    }
                 })
                 .on('mouseover', function (d) {
                     d3.select(this).style('stroke', config.mouseoverOutlineColor);
@@ -401,9 +437,7 @@ $(document).ready(function () {
                         .style('opacity', 0);
                 })
                 .on('click', function (d) {
-                    var url = urlPrefix + getY(d);
-                    console.log('Url: ', url);
-                    window.open(url);
+                    onBubbleClick(getY(d));
                 });
 
         }
@@ -420,5 +454,8 @@ $(document).ready(function () {
     fetchSlideCommentsUsersHistogramData(function () {
         drawSlideCommentsHistogram();
         drawUserCommentsPostHistogram();
+    });
+    fetchUserCommentsViewHistogramData(function () {
+        drawUserCommentsViewHistogram();
     });
 });
