@@ -10,8 +10,6 @@ $(document).ready(function () {
     var slideUsageData;
     var userActivityData;
     var userInteractionData;
-    var $actionSlideUsageHistogramEl = $('.action-slide-usage-histogram');
-    var $actionUserActivityHistogramEl = $('.action-user-activity-histogram');
     var $chartModalEl = $('#chart-modal');
     var urlPrefix = 'http://prez.dialedin.io/assignments/98/presentation?child_index=';
     var commonChartConfig = {
@@ -237,7 +235,7 @@ $(document).ready(function () {
         removeAllFromSvg(svgSelector);
 
         var config = $.extend(commonChartConfig, {
-            height: 350,
+            height: 400,
             bubbleFillColor: '#0D4285',
             dotSize: 4,
             dotR: 2.5,
@@ -341,14 +339,6 @@ $(document).ready(function () {
         }
         drawChart();
     }
-
-    $actionSlideUsageHistogramEl.click(function () {
-        drawSlideUsageHistogram();
-    });
-
-    $actionUserActivityHistogramEl.click(function () {
-        drawUserActivityHistogram();
-    });
 
     fetchSlideUsageHistogramData(function () {
         drawSlideUsageHistogram();
