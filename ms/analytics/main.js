@@ -144,7 +144,7 @@ $(document).ready(function () {
             yKey: 'frequency',
             labelMap: {
                 slide_index: 'Slide Number',
-                user_id: 'User ID'
+                frequency: 'Count'
             },
             onBarClick: openSlideInNewTab
         });
