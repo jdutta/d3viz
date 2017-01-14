@@ -10,22 +10,26 @@ $(document).ready(function () {
     var slideUsageData;
     var userActivityData;
     var userInteractionData;
+    var slideCommentsData;
+    var userCommentsViewData;
+    var userCommentsPostData;
     var $chartModalEl = $('#chart-modal');
     var urlPrefix = 'http://prez.dialedin.io/assignments/98/presentation?child_index=';
     var commonChartConfig = {
         width: 600,
-        gRootXY: [50, 20]
+        gRootXY: [50, 20],
+        tooltipTopAdj: -40
     };
 
     function fetchSlideUsageHistogramData(callback) {
-        d3.json('slides_index_frequency.json', function (json) {
+        d3.json('data/slides_index_frequency.json', function (json) {
             slideUsageData = json;
             callback();
         });
     }
 
     function fetchUserInteractionScatterplotData(callback) {
-        d3.json('all_users_presentation_time.json', function (json) {
+        d3.json('data/all_users_presentation_time.json', function (json) {
             userInteractionData = json;
 
             // sanitize
@@ -45,13 +49,52 @@ $(document).ready(function () {
     }
 
     function fetchUserActivityHistogramData(callback) {
-        d3.csv('user_view_activity_distribution.csv', function (json) {
+        d3.csv('data/user_view_activity_distribution.csv', function (json) {
             userActivityData = json.map(function (o) {
                 return {
                     user_id: o.user_id,
                     count: +o.count
                 };
             });
+            callback();
+        });
+    }
+
+    function fetchSlideCommentsUsersHistogramData(callback) {
+        d3.csv('data/slide_comments_users.csv', function (json) {
+            var slideFreq = {};
+            var userFreq = {};
+            json.forEach(function (o) {
+                if (!slideFreq[o.slide_index]) {
+                    slideFreq[o.slide_index] = 1;
+                } else {
+                    slideFreq[o.slide_index]++;
+                }
+                if (!userFreq[o.user_id]) {
+                    userFreq[o.user_id] = 1;
+                } else {
+                    userFreq[o.user_id]++;
+                }
+            });
+
+            slideCommentsData = Object.keys(slideFreq).map(function (k) {
+                return {
+                    slide_index: k,
+                    frequency: slideFreq[k]
+                }
+            }).sort(function (a, b) {
+                return a.frequency === b.frequency ? 0 : (a.frequency > b.frequency ? -1 : 1);
+            });
+
+            userCommentsPostData = Object.keys(userFreq).map(function (k) {
+                return {
+                    user_id: k,
+                    frequency: userFreq[k]
+                }
+            }).sort(function (a, b) {
+                return a.frequency === b.frequency ? 0 : (a.frequency > b.frequency ? -1 : 1);
+            });
+
             callback();
         });
     }
@@ -88,6 +131,33 @@ $(document).ready(function () {
             xKey: 'user_id',
             yKey: 'count',
             onBarClick: onBarClick
+        });
+    }
+
+    function drawSlideCommentsHistogram() {
+        function onBarClick(slideIndex) {
+            var url = urlPrefix + slideIndex;
+            console.log(url);
+            window.open(url);
+        }
+        drawHistogram({
+            svgSelector: 'svg.chart4',
+            data: slideCommentsData,
+            caption: 'Chart: Which slides are getting most comments?',
+            xKey: 'slide_index',
+            yKey: 'frequency',
+            onBarClick: onBarClick
+        });
+    }
+
+    function drawUserCommentsPostHistogram() {
+        drawHistogram({
+            svgSelector: 'svg.chart5',
+            data: userCommentsPostData,
+            caption: 'Chart: Which users are posting most comments?',
+            xKey: 'user_id',
+            yKey: 'frequency',
+            onBarClick: function () {}
         });
     }
 
@@ -193,7 +263,7 @@ $(document).ready(function () {
                     d3.select(this).style('fill', config.mouseoverFillColor);
                     d3.select('.tooltip')
                         .style('left', config.gRootXY[0] + xScale(getX(d)) + 'px')
-                        .style('top', config.gRootXY[1] + 'px')
+                        .style('top', ($(svgSelector).offset().top + config.tooltipTopAdj) + 'px')
                         .style('opacity', 1)
                         .text(xKey + ': ' + getX(d) + ', ' + yKey + ': ' + getY(d));
                 })
@@ -343,9 +413,12 @@ $(document).ready(function () {
     fetchSlideUsageHistogramData(function () {
         drawSlideUsageHistogram();
     });
-
     fetchUserInteractionScatterplotData(function () {});
     fetchUserActivityHistogramData(function () {
         drawUserActivityHistogram();
+    });
+    fetchSlideCommentsUsersHistogramData(function () {
+        drawSlideCommentsHistogram();
+        drawUserCommentsPostHistogram();
     });
 });

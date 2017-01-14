@@ -1,5 +1,6 @@
 .chart-container {
     position: relative;
+    margin-top: 20px;
 }
 
 .chart-container .tooltip {
@@ -31,6 +32,7 @@ svg {
     height: 300px;
 }
 
+/* scatterplot */
 svg.chart3 {
     height: 500px;
 }
