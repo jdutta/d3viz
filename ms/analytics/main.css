@@ -1,6 +1,5 @@
 .chart-container {
     position: relative;
-    height: 500px;
 }
 
 .chart-container .tooltip {
@@ -11,14 +10,29 @@
     box-shadow: 0 0 1px 0 rgba(0, 0, 0, 0.2);
 }
 
+#chart-modal .modal-dialog {
+    width: 800px;
+}
+
+#chart-modal .btn-close {
+    position: absolute;
+    margin: 10px 10px 0 0;
+    top: 0;
+    right: 0;
+}
+
 .user-id-buttons-container button {
     margin-right: 2px;
     margin-bottom: 2px;
 }
 
 svg {
-    width: 100%;
-    height: 100%;
+    width: 700px;
+    height: 300px;
+}
+
+svg.chart3 {
+    height: 500px;
 }
 
 svg g.axis path, svg g.axis line {

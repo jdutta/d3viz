@@ -6,24 +6,29 @@
 
 <body>
 <div class="container">
-    <h1>Demo</h1>
-    <ul class="list-unstyled">
-        <li><a href="#" class="action-slide-usage-histogram">Slide access frequency histogram by all users</a></li>
-        <li><a href="#" class="action-user-activity-histogram">User activity histogram</a></li>
-        <li>
-            <div>Slide interaction by user scatter plot:</div>
-            <span class="user-id-buttons-container"></span>
-        </li>
-    </ul>
+    <h3>Slide usage analytics</h3>
 
     <div class="chart-container">
-        <svg></svg>
+        <svg class="chart1"></svg>
+        <svg class="chart2"></svg>
+
+        <div id="chart-modal" class="modal fade">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <svg class="chart3"></svg>
+                    </div>
+                    <button type="button" class="btn btn-default btn-close" data-dismiss="modal">&times;</button>
+                </div>
+            </div>
+        </div>
         <div class="tooltip"></div>
     </div>
 </div>
 </body>
 
 <script src="../3rdparty/jquery.min.js"></script>
+<script src="../3rdparty/bootstrap.min.js"></script>
 <script src="../3rdparty/d3.min.js"></script>
 <script src="main.js"></script>
 
