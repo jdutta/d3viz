@@ -1,5 +1,12 @@
 $(document).ready(function () {
 
+    /*
+    todo:
+    "Which Slides Are Getting Most Comments?"
+    "Which Students Are Viewing Most Comments?"
+    "Which Students Are Posting Most Comments?"
+    */
+
     var slideUsageData;
     var userActivityData;
     var userInteractionData;
